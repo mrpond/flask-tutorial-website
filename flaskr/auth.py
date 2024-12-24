@@ -89,14 +89,24 @@ def load_logged_in_user():
             'id': user_id,
             'username': username
         }
-#    try:
-#        g.user = get_db().execute_scalar(
-#            'SELECT id FROM user WHERE id = ?user_id?', param={"user_id": user_id},
-#        )
-#    except Exception as e:
-#        session.clear()
-#        g.user = None
-            
+'''
+        try:
+            check_id = get_db().execute_scalar(
+                'SELECT id FROM user WHERE id = ?user_id?', param={"user_id": user_id},
+            )
+            if check_id == user_id:
+                g.user = {
+                    'id': user_id,
+                    'username': username
+                }
+            else:
+                session.clear()
+                g.user = None
+        except Exception as e:
+            session.clear()
+            g.user = None
+'''
+
 @bp.route('/logout')
 def logout():
     session.clear()

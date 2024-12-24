@@ -1,13 +1,26 @@
 import pydapper
-
+import sqlite3
+import mariadb
 import click
 from flask import current_app, g
 
 def get_db():
     if 'db' not in g:
-        dsn = current_app.config['DATABASE_DSN']  # Assuming you've set this in your config
-        g.db = pydapper.connect(dsn)
-        #g.db = pydapper.connect(dsn, autocommit=true)
+        db_type = current_app.config.get('DB_TYPE', 'sqlite')  # Default to SQLite
+        match db_type:
+            case 'sqlite':
+                # Initialize SQLite connection
+                g.db = pydapper.using(
+                    sqlite3.connect(current_app.config['SQLITE_PATH'])
+                )
+            case 'mariadb':
+                # Initialize MariaDB connection
+                g.db = pydapper.using(
+                    mariadb.connect(**current_app.config['DATABASE'])
+                )
+            case _:
+                # Handle unsupported database types
+                raise ValueError(f"Unsupported DB_TYPE: {db_type}")
     return g.db
 
 def close_db(e=None):
@@ -33,10 +46,19 @@ def executescript(schema_sql):
     db.commit()
                 
 def init_db():
-    with current_app.open_resource('schema_sqlite.sql') as f:
+    db_type = current_app.config.get('DB_TYPE', 'sqlite')  # Default to SQLite
+    sql_file = None
+    match db_type:
+        case 'sqlite':
+            sql_file = 'schema_sqlite.sql'
+        case 'mariadb':
+            sql_file = 'schema_mariadb.sql'
+        case _:
+            # Handle unsupported database types
+            raise ValueError(f"Unsupported DB_TYPE: {db_type}")
+    with current_app.open_resource(sql_file) as f:
         schema_sql = f.read().decode('utf8')
         executescript(schema_sql)
-    
     
 @click.command('init-db')
 def init_db_command():

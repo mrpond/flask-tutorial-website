@@ -5,9 +5,15 @@ def create_app(custom_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
-        DATABASE_DSN='sqlite+sqlite3://flaskr.sqlite3',
-        #DATABASE_DSN=f'mariadb://root:123456@localhost:3306/flaskr',
-        
+        DB_TYPE = 'mariadb', # choice 'mariadb' or 'sqlite'
+        SQLITE_PATH = os.path.join(app.instance_path, 'flaskr.sqlite'),
+        DATABASE = {
+            "user": "root",
+            "password": "123456",
+            "host": "localhost",
+            "port": 3306,
+            "database": "flaskr",
+        },
     )
 
     if custom_config is None:

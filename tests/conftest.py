@@ -11,12 +11,19 @@ with open(os.path.join(os.path.dirname(__file__), 'data.sql'), 'rb') as f:
 
 @pytest.fixture
 def app():
-    #db_fd, db_path = tempfile.mkstemp()
+    db_fd, db_path = tempfile.mkstemp()
 
     app = create_app({
         'TESTING': True,
-        'DATABASE_DSN': 'sqlite+sqlite3://flaskr_test.sqlite3',
-        'DATABASE_DSN_OPTION': 'autocommit=True'
+        'DB_TYPE': 'mariadb',
+        'SQLITE_PATH': db_path,
+        'DATABASE': {
+            "user": "root",
+            "password": "123456",
+            "host": "localhost",
+            "port": 3306,
+            "database": "flaskr",
+        },
     })
 
     with app.app_context():
@@ -25,8 +32,8 @@ def app():
 
     yield app
 
-    #os.close(db_fd)
-    #os.unlink(db_path)
+    os.close(db_fd)
+    os.unlink(db_path)
 
 
 @pytest.fixture
