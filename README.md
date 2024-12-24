@@ -1,31 +1,43 @@
-#get it up and running
-python -m venv .venv
-.venv\Scripts\activate
+# get it up and running
 
-pip install Flask
-pip install .\dependency\coro_context_manager-0.2.0-py2.py3-none-any.whl
-pip install .\dependency\pydapper-0.10.0-py2.py3-none-any.whl
-pip install mariadb
+``python -m venv .venv``
 
-#init db
-flask --app flaskr init-db 
+``.venv\Scripts\activate``
 
-#test run
-flask --app flaskr run --debug
+``pip install Flask``
 
-#to test
-pip install pytest coverage
-pytest
-coverage run -m pytest
-coverage report
-coverage html
+``pip install .\dependency\coro_context_manager-0.2.0-py2.py3-none-any.whl``
 
-#build
-pip install build
-python -m build --wheel
+``pip install .\dependency\pydapper-0.10.0-py2.py3-none-any.whl``
 
-You can find the file in dist/flaskr-1.0.0-py3-none-any.whl. The file name is in the format of {project name}-{version}-{python tag} -{abi tag}-{platform tag}.
+``pip install mariadb``
+
+# init db
+``flask --app flaskr init-db ``
+
+# test run
+``flask --app flaskr run --debug``
+
+# to test
+``pip install pytest coverage``
+
+``pytest``
+
+``coverage run -m pytest``
+
+``coverage report``
+
+``coverage html``
+
+# build
+``pip install build``
+
+``python -m build --wheel``
+
+```
+You can find the file in dist/flaskr-**.whl.
 
 set up a new virtualenv, then install the file with pip.
+```
 
-$ pip install flaskr-1.0.0-py3-none-any.whl
+``pip install flaskr-1.0.0-py3-none-any.whl``
