@@ -5,7 +5,7 @@ def create_app(custom_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
-        DB_TYPE = 'mariadb', # choice 'mariadb' or 'sqlite'
+        DB_TYPE = 'sqlite', # choice 'mariadb' or 'sqlite'
         SQLITE_PATH = os.path.join(app.instance_path, 'flaskr.sqlite'),
         DATABASE = {
             "user": "root",
