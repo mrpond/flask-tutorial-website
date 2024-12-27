@@ -113,13 +113,24 @@ def logout():
     g.user = None
     return redirect(url_for('index'))
 
-
 def login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        if g.user is None:
-            return redirect(url_for('auth.login'))
-
-        return view(**kwargs)
+        user_id = session.get('id')
+        username = session.get('username')
+        if user_id is not None and username is not None:
+            try:
+                check_id = get_db().execute_scalar(
+                    'SELECT id FROM user WHERE id = ?user_id? and username = ?username?',
+                    param={"user_id": user_id, "username": username},
+                )
+                if check_id == user_id:
+                    return view(**kwargs)
+            except Exception:
+                pass
+                
+        g.user = None
+        session.clear()
+        return redirect(url_for('auth.login'))
 
     return wrapped_view

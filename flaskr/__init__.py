@@ -1,11 +1,12 @@
 import os
 from flask import Flask
+import secrets
 
 def create_app(custom_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
-        SECRET_KEY='dev',
-        DB_TYPE = 'sqlite', # choice 'mariadb' or 'sqlite'
+        SECRET_KEY=get_secret_key(os.path.join(app.instance_path, 'secret_key')),
+        DB_TYPE = 'mariadb', # choice 'mariadb' or 'sqlite'
         SQLITE_PATH = os.path.join(app.instance_path, 'flaskr.sqlite'),
         DATABASE = {
             "user": "root",
@@ -45,3 +46,14 @@ def create_app(custom_config=None):
     app.add_url_rule('/', endpoint='index')
     
     return app
+
+def get_secret_key(path):
+    return secrets.token_hex(24)
+    if not os.path.exists(path):
+        with open(path, 'w') as f:
+            key = secrets.token_hex(16)
+            f.write(key)
+    else:
+        with open(path, 'r') as f:
+            key = f.read().strip()
+    return key
