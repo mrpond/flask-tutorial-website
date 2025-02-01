@@ -1,6 +1,7 @@
 import pytest
 from flask import g, session
 from flaskr.db import get_db
+from sqlalchemy import text
 
 
 def test_register(client, app):
@@ -10,13 +11,14 @@ def test_register(client, app):
         data={"username": "a", "password": "a"},
         follow_redirects=True,
     )
-    message = b"User registeration completed, you can now login with a"
+    message = b"User registration completed, you can now login with a"
     # assert response.headers["Location"] == "/auth/login" and response.status_code == 302
     assert message in response.data
     with app.app_context():
-        account = get_db().query_single(
-            "SELECT * FROM user WHERE username = 'a'",
-        )
+        account = get_db().execute(
+            text("SELECT * FROM user WHERE username = :username"),
+            {"username": "a"},
+        ).fetchone()
         assert account is not None
 
 

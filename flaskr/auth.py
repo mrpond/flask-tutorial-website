@@ -14,7 +14,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from flaskr.db import get_db
 
-from pydapper import exceptions
+from sqlalchemy import text
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -32,32 +32,34 @@ def register():
             message = "Password is required."
 
         if message is None:
+            db = get_db()
             try:
-                db = get_db()
-                user_id = get_db().execute_scalar(
-                    "SELECT id FROM user WHERE username = ?username?",
-                    param={"username": username},
-                )
-                if user_id > 0:
+                result = db.execute(
+                    text("SELECT id FROM user WHERE username = :username"),
+                    {"username": username},
+                ).scalar_one_or_none()
+                if result is not None:
                     message = f"User {username} is already registered."
-
-            except exceptions.NoResultException:
-                db.execute(
-                    "INSERT INTO user (username, password) VALUES (?username?, ?password?)",
-                    param={
-                        "username": username,
-                        "password": generate_password_hash(password),
-                    },
-                )
-                db.commit()
-                flash(
-                    f"User registeration completed, you can now login with {username}"
-                )
-                return redirect(url_for("auth.login"))
+                else:
+                    db.execute(
+                        text(
+                            "INSERT INTO user (username, password) VALUES (:username, :password)"
+                        ),
+                        {
+                            "username": username,
+                            "password": generate_password_hash(password),
+                        },
+                    )
+                    db.commit()
+                    flash(
+                        f"User registration completed, you can now login with {username}"
+                    )
+                    return redirect(url_for("auth.login"))
             except Exception as e:
-                message = f"System error {e.args}"
+                message = f"System error {e}"
 
         flash(message)
+
     return render_template("auth/register.html")
 
 
@@ -66,85 +68,74 @@ def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-        message = None
+        message = "Incorrect username or password."
         try:
-            user = get_db().query_single(
-                "SELECT id, password FROM user WHERE username = ?username?",
-                param={"username": username},
+            result = (
+                get_db()
+                .execute(
+                    text("SELECT id, password FROM user WHERE username = :username"),
+                    {"username": username},
+                )
+                .fetchone()
             )
-            if user["id"] > 0 and check_password_hash(user["password"], password):
-                session["id"] = user["id"]
-                session["username"] = username
-                session.modified = True
-                g.user = {"id": user["id"], "username": username}
-                return redirect(url_for("index"))
-            else:
-                message = "Incorrect username or password."
-        except exceptions.NoResultException:
-            message = "Incorrect username or password."
+            if result is not None:
+                if result.id > 0 and check_password_hash(result.password, password):
+                    session.clear()
+                    session["id"] = result.id
+                    session["username"] = username
+                    return redirect(url_for("index"))
+                pass
         except Exception as e:
-            message = f"System error {e.args}"
+            message = f"System error {e}"
 
         flash(message)
 
     return render_template("auth/login.html")
 
 
+def verify_user(user_id, username):
+    if user_id is not None and username is not None:
+        try:
+            result = (
+                get_db()
+                .execute(
+                    text("SELECT username FROM user WHERE id = :user_id"),
+                    {"user_id": user_id},
+                )
+                .scalar_one_or_none()
+            )
+            if result is not None and result == username:
+                return True
+        except Exception:
+            pass
+
+    return False
+
+
 @bp.before_app_request
 def load_logged_in_user():
     user_id = session.get("id")
     username = session.get("username")
-
-    if user_id is None or username is None:
-        g.user = None
-    else:
+    if verify_user(user_id, username) is True:
         g.user = {"id": user_id, "username": username}
-
-
-"""
-    try:
-        check_id = get_db().execute_scalar(
-            'SELECT id FROM user WHERE id = ?user_id?', param={"user_id": user_id},
-        )
-        if check_id == user_id:
-            g.user = {
-                'id': user_id,
-                'username': username
-            }
-        else:
-            session.clear()
-            g.user = None
-    except Exception as e:
-        session.clear()
+    else:
         g.user = None
-"""
-
-
-@bp.route("/logout")
-def logout():
-    session.clear()
-    g.user = None
-    return redirect(url_for("index"))
 
 
 def login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        user_id = session.get("id")
-        username = session.get("username")
-        if user_id is not None and username is not None:
-            try:
-                check_id = get_db().execute_scalar(
-                    "SELECT id FROM user WHERE id = ?user_id? and username = ?username?",
-                    param={"user_id": user_id, "username": username},
-                )
-                if check_id == user_id:
-                    return view(**kwargs)
-            except Exception:
-                pass
+        if g.user is None:
+            flash("Login required")
+            return redirect(url_for("auth.login"))
 
-        g.user = None
-        session.clear()
-        return redirect(url_for("auth.login"))
+        return view(**kwargs)
 
     return wrapped_view
+
+
+@bp.route("/logout")
+def logout():
+    session.clear()
+
+    return redirect(url_for("index"))

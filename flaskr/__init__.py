@@ -7,15 +7,9 @@ def create_app(custom_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY=get_secret_key(os.path.join(app.instance_path, "secret_key")),
-        DB_TYPE="mariadb",  # choice 'mariadb' or 'sqlite'
         SQLITE_PATH=os.path.join(app.instance_path, "flaskr.sqlite"),
-        DATABASE={
-            "user": "root",
-            "password": "123456",
-            "host": "localhost",
-            "port": 3306,
-            "database": "flaskr",
-        },
+        #SQLALCHEMY_DATABASE_URI=f"sqlite:///{os.path.join(app.instance_path, "flaskr.sqlite")}",
+        SQLALCHEMY_DATABASE_URI="mariadb+mariadbconnector://root:123456@localhost:3306/flaskr",
     )
 
     if custom_config is None:

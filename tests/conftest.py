@@ -3,7 +3,7 @@ import tempfile
 
 import pytest
 from flaskr import create_app
-from flaskr.db import get_db, init_db, executescript
+from flaskr.db import init_db, executescript
 
 with open(os.path.join(os.path.dirname(__file__), "data.sql"), "rb") as f:
     _data_sql = f.read().decode("utf8")
@@ -12,19 +12,12 @@ with open(os.path.join(os.path.dirname(__file__), "data.sql"), "rb") as f:
 @pytest.fixture
 def app():
     db_fd, db_path = tempfile.mkstemp()
-
     app = create_app(
         {
             "TESTING": True,
-            "DB_TYPE": "mariadb",
             "SQLITE_PATH": db_path,
-            "DATABASE": {
-                "user": "root",
-                "password": "123456",
-                "host": "localhost",
-                "port": 3306,
-                "database": "flaskr",
-            },
+            "SQLALCHEMY_DATABASE_URI": "mariadb+mariadbconnector://root:123456@localhost:3306/flaskr",
+            #"SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
         }
     )
 

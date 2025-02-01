@@ -1,6 +1,6 @@
 import pytest
 from flaskr.db import get_db
-from pydapper import exceptions
+from sqlalchemy import text
 
 
 def test_index(client, auth):
@@ -13,7 +13,7 @@ def test_index(client, auth):
     assert b"Log Out" in response.data
     assert b"test title" in response.data
     assert b"by test on 2018-01-01" in response.data
-    assert b"test\nbody" in response.data
+    assert b"test-body" in response.data
     assert b'href="/1/update"' in response.data
 
 
@@ -35,7 +35,8 @@ def test_author_required(app, client, auth):
     with app.app_context():
         db = get_db()
         db.execute(
-            "UPDATE post SET author_id = 2 WHERE id = 1",
+            text("UPDATE post SET author_id = :author_id WHERE id = :id"),
+            {"author_id": 2, "id": 1},
         )
         db.commit()
     auth.login()
@@ -43,7 +44,7 @@ def test_author_required(app, client, auth):
     # current user can't modify other user's post
     # assert client.post('/1/update').status_code == 403
     # assert client.post('/1/delete').status_code == 403
-    message = b"You don&#39;t had permission to edit this post"
+    message = b"You don&#39;t had permission to modify this post id 1"
     response = client.post(
         "/1/update",
         data={"title": "update", "body": ""},
@@ -88,7 +89,9 @@ def test_create(client, auth, app):
 
     with app.app_context():
         db = get_db()
-        count = db.execute_scalar("SELECT COUNT(id) FROM post")
+        count = db.execute(
+            text("SELECT COUNT(id) FROM post"),
+        ).scalar_one_or_none()
         assert count == 2
 
 
@@ -101,9 +104,15 @@ def test_update(client, auth, app):
     )
 
     with app.app_context():
-        db = get_db()
-        post = db.query_single("SELECT * FROM post WHERE id = 1")
-        assert post["title"] == "updated"
+        post = (
+            get_db()
+            .execute(
+                text("SELECT * FROM post WHERE id = :id"),
+                {"id": 1},
+            )
+            .fetchone()
+        )
+        assert post.title == "updated"
 
 
 @pytest.mark.parametrize(
@@ -130,12 +139,10 @@ def test_delete(client, auth, app):
     assert response.headers["Location"] == "/"
 
     with app.app_context():
+        no_result = None
         db = get_db()
-        no_result = False
-        try:
-            db.query_single(
-                "SELECT * FROM post WHERE id = 1",
-            )
-        except exceptions.NoResultException:
-            no_result = True
-        assert no_result
+        no_result = db.execute(
+            text("SELECT * FROM post WHERE id = :id"),
+            {"id": 1},
+        ).fetchone()
+        assert no_result is None

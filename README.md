@@ -4,13 +4,13 @@
 
 ``.venv\Scripts\activate``
 
-``pip install Flask``
+``pip install -U Flask``
 
-``pip install .\dependency\coro_context_manager-0.2.0-py2.py3-none-any.whl``
+``pip install -U Flask-SQLAlchemy``
 
-``pip install .\dependency\pydapper-0.10.0-py2.py3-none-any.whl``
+# install db engine you want to use
 
-``pip install mariadb``
+``pip install -U mariadb``
 
 # init db
 ``flask --app flaskr init-db ``
