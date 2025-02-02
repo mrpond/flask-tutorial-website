@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Dashboard{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<article class="dashboard">
+  <header>
+    <div>
+      <h1>User Manage</h1>
+    </div>
+  </header>
+  <p class="body"><a href="{{ url_for('auth.change_password') }}">Change Password</a></p>
+</article>
+{% if g.user["id"] == 1 %}
+<hr>
+<article class="dashboard">
+  <header>
+    <div>
+      <h1>Manage Blog Post</h1>
+    </div>
+  </header>
+  <p class="body"><a href="{{ url_for('blog.manage') }}">Manage Blog Post</a></p>
+</article>
+{% endif %}
+{% endblock %}

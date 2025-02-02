@@ -1,8 +1,8 @@
-from sqlalchemy import create_engine, text, NullPool
+from sqlalchemy import create_engine, text, NullPool, Connection
 import click
 from flask import current_app, g
 
-def get_db():
+def get_db() -> Connection:
     if "db" not in g:
         g.db = current_app.db_pool.connect()
     return g.db

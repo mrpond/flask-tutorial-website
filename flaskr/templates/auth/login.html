@@ -5,11 +5,55 @@
 {% endblock %}
 
 {% block content %}
-<form method="post">
+<form method="post" id="login_form">
   <label for="username">Username</label>
   <input name="username" id="username" required>
   <label for="password">Password</label>
   <input type="password" name="password" id="password" required>
   <input type="submit" value="Log In">
 </form>
+
+<script>
+  document.getElementById('login_form').addEventListener('submit', function (event) {
+    // Prevent form submission if validation fails
+    event.preventDefault();
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    let flashMessages = document.getElementById('flash-messages');
+    
+    // Clear any existing flash messages
+    flashMessages.innerHTML = '';
+    
+    if (!/^[a-zA-Z0-9]+$/.test(username)) {
+        let flashDiv = document.createElement('div');
+        flashDiv.className = 'flash';
+        flashDiv.textContent = 'Username must contain only alphanumeric characters.';
+        flashMessages.appendChild(flashDiv);
+        return;
+    }
+
+    if (username.length < 4) {
+      let flashDiv = document.createElement('div');
+      flashDiv.className = 'flash';
+      flashDiv.textContent = 'Username must be at least 4 characters long.';
+      flashMessages.appendChild(flashDiv);
+      return;
+  }
+
+    if (password.length < 4) {
+        let flashDiv = document.createElement('div');
+        flashDiv.className = 'flash';
+        flashDiv.textContent = 'Password must be at least 4 characters long.';
+        flashMessages.appendChild(flashDiv);
+        return;
+    }
+
+    if (flashMessages.children.length === 0) {
+        // If no validation errors, submit the form
+        event.target.submit();
+    }
+  });
+</script>
 {% endblock %}

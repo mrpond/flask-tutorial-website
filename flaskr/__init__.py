@@ -8,8 +8,8 @@ def create_app(custom_config=None):
     app.config.from_mapping(
         SECRET_KEY=get_secret_key(os.path.join(app.instance_path, "secret_key")),
         SQLITE_PATH=os.path.join(app.instance_path, "flaskr.sqlite"),
-        #SQLALCHEMY_DATABASE_URI=f"sqlite:///{os.path.join(app.instance_path, "flaskr.sqlite")}",
-        SQLALCHEMY_DATABASE_URI="mariadb+mariadbconnector://root:123456@localhost:3306/flaskr",
+        SQLALCHEMY_DATABASE_URI=f"sqlite:///{os.path.join(app.instance_path, "flaskr.sqlite")}",
+        #SQLALCHEMY_DATABASE_URI="mariadb+mariadbconnector://root:123456@localhost:3306/flaskr",
     )
 
     if custom_config is None:

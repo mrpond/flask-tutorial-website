@@ -6,7 +6,7 @@
 
 ``pip install -U Flask``
 
-``pip install -U Flask-SQLAlchemy``
+``pip install -U SQLAlchemy``
 
 # install db engine you want to use
 
@@ -19,7 +19,7 @@
 ``flask --app flaskr run --debug``
 
 # to test
-``pip install pytest coverage``
+``pip install -U pytest coverage``
 
 ``pytest``
 
@@ -30,7 +30,7 @@
 ``coverage html``
 
 # build
-``pip install build``
+``pip install -U build``
 
 ``python -m build --wheel``
 
