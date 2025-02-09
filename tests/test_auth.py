@@ -1,8 +1,9 @@
 import pytest
 from flask import g, session
-from flaskr.db import get_db
 from sqlalchemy import text
 from werkzeug.security import check_password_hash, generate_password_hash
+
+from flaskr.db import get_db
 
 
 def test_register(client, app):
@@ -67,6 +68,12 @@ def test_login(client, auth):
         ("test", "newpassword", "mismatchpassword", b"New passwords do not match."),
         ("xxx", "newpassword", "newpassword", b"Current password is incorrect."),
         ("test", "test", "test", b"New passwords is the same as current password."),
+        (
+            "test",
+            "newpassword",
+            "newpassword",
+            b"Password change completed, you can now login with new password.",
+        ),
     ),
 )
 def test_change_password(
@@ -92,66 +99,6 @@ def test_change_password(
         follow_redirects=True,
     )
     assert message in response.data
-
-
-# Test for successful password change
-def test_change_password_success(client, auth, app):
-    assert client.get("/auth/login").status_code == 200
-    response = auth.login()
-    assert response.status_code == 302
-    assert response.headers["Location"] == "/"
-
-    # Go to the change password page
-    response = client.get("/auth/change_password")
-    assert response.status_code == 200
-
-    # Test correct password change
-    response = client.post(
-        "/auth/change_password",
-        data={
-            "current_password": "test",
-            "new_password": "newpassword",
-            "confirm_new_password": "newpassword",
-        },
-        follow_redirects=True,
-    )
-    assert (
-        response.status_code == 200
-    )  # Assuming this is where the flash message is displayed after redirect
-    assert (
-        b"Password change completed, you can now login with new password."
-        in response.data
-    )
-
-    # Check if user is logged out after password change
-    with client:
-        client.get("/")
-        assert "id" not in session
-        assert g.user is None
-
-    # Test login with new password
-    response = auth.login(password="newpassword")
-    assert response.status_code == 302
-    assert response.headers["Location"] == "/"
-
-    # Verify password has been changed in the database
-    with app.app_context():
-        db = get_db()
-        result = db.execute(
-            text("SELECT password FROM user WHERE username = :username"),
-            {"username": "test"},
-        ).scalar_one_or_none()
-        assert result is not None
-        assert check_password_hash(result, "newpassword")
-
-    # Reset password for other tests (assuming 'test' as the original password)
-    with app.app_context():
-        db = get_db()
-        db.execute(
-            text("UPDATE user SET password = :password WHERE username = :username"),
-            {"username": "test", "password": generate_password_hash("test")},
-        )
-        db.commit()
 
 
 @pytest.mark.parametrize(

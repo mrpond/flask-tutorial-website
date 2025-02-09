@@ -1,6 +1,7 @@
-from sqlalchemy import create_engine, text, NullPool, Connection
 import click
 from flask import current_app, g
+from sqlalchemy import Connection, NullPool, create_engine, text
+
 
 def get_db() -> Connection:
     if "db" not in g:
@@ -53,7 +54,9 @@ def init_db_command():
 def init_app(app):
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)
-    db_uri = app.config.get("SQLALCHEMY_DATABASE_URI", f"sqlite:///{app.config['SQLITE_PATH']}")
+    db_uri = app.config.get(
+        "SQLALCHEMY_DATABASE_URI", f"sqlite:///{app.config['SQLITE_PATH']}"
+    )
     if db_uri.startswith("sqlite"):
         app.db_pool = create_engine(db_uri, poolclass=NullPool)  # No pooling for SQLite
     else:

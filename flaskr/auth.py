@@ -10,11 +10,10 @@ from flask import (
     session,
     url_for,
 )
+from sqlalchemy import text
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from flaskr.db import get_db
-
-from sqlalchemy import text
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -203,5 +202,5 @@ def change_password():
 
         flash(message)
         return redirect(url_for("auth.change_password"))
-    
+
     return render_template("auth/change_password.html")

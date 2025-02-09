@@ -1,9 +1,8 @@
 from flask import Blueprint, flash, g, redirect, render_template, request, url_for
+from sqlalchemy import text
 
 from flaskr.auth import login_required
 from flaskr.db import get_db
-
-from sqlalchemy import text
 
 bp = Blueprint("blog", __name__)
 
@@ -146,7 +145,9 @@ def manage_update(id):
                 try:
                     db = get_db()
                     db.execute(
-                        text("UPDATE post SET title = :title, body = :body WHERE id = :id"),
+                        text(
+                            "UPDATE post SET title = :title, body = :body WHERE id = :id"
+                        ),
                         {"title": title, "body": body, "id": id},
                     )
                     db.commit()

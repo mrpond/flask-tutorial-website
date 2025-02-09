@@ -1,15 +1,23 @@
 import os
-from flask import Flask
 import secrets
 
+from flask import Flask
 
-def create_app(custom_config=None):
+
+def create_app(custom_config=None) -> Flask:
     app = Flask(__name__, instance_relative_config=True)
+
+    # ensure the instance folder exists>
+    try:
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass
+
     app.config.from_mapping(
         SECRET_KEY=get_secret_key(os.path.join(app.instance_path, "secret_key")),
         SQLITE_PATH=os.path.join(app.instance_path, "flaskr.sqlite"),
-        SQLALCHEMY_DATABASE_URI=f"sqlite:///{os.path.join(app.instance_path, "flaskr.sqlite")}",
-        #SQLALCHEMY_DATABASE_URI="mariadb+mariadbconnector://root:123456@localhost:3306/flaskr",
+        SQLALCHEMY_DATABASE_URI=f"sqlite:///{os.path.join(app.instance_path, 'flaskr.sqlite')}",
+        # SQLALCHEMY_DATABASE_URI="mariadb+mariadbconnector://root:123456@localhost:3306/flaskr",
     )
 
     if custom_config is None:
@@ -18,12 +26,6 @@ def create_app(custom_config=None):
     else:
         # load the test config if passed in
         app.config.from_mapping(custom_config)
-
-    # ensure the instance folder exists
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
 
     # a simple page that says hello
     @app.route("/hello")
@@ -46,7 +48,7 @@ def create_app(custom_config=None):
     return app
 
 
-def get_secret_key(path):
+def get_secret_key(path: str) -> str:
     if not os.path.exists(path):
         with open(path, "w") as f:
             key = secrets.token_hex(16)
