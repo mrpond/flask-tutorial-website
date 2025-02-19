@@ -68,8 +68,8 @@ class TurnstileManager {
             }
             element.addEventListener('submit', (e) => {
                 e.preventDefault();
-                if (form.callback && typeof this[form.callback] === 'function') {
-                    if (tform.callback() === true) {
+                if (form.callback && typeof (form.callback) === 'function') {
+                    if (form.callback() === true) {
                         this.showModal(form);
                     }
                 } else {
