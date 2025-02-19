@@ -5,11 +5,55 @@
 {% endblock %}
 
 {% block content %}
-<form method="post">
+<form method="post" id="register-form">
   <label for="username">Username</label>
   <input name="username" id="username" required>
   <label for="password">Password</label>
   <input type="password" name="password" id="password" required>
+  <div id="password-strength"></div>
+  <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-register">
   <input type="submit" value="Register">
 </form>
+<script>
+  document.getElementById('password').addEventListener('input', function () {
+    const password = this.value;
+    const strengthText = document.getElementById('password-strength');
+
+    // Reset styles
+    strengthText.className = '';
+
+    // Check password strength
+    const strength = checkPasswordStrength(password);
+
+    // Display result
+    strengthText.textContent = `Strength: ${strength}`;
+    strengthText.classList.add(strength.toLowerCase());
+  });
+
+  function checkPasswordStrength(password) {
+    let score = 0;
+
+    // Minimum length
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+
+    // Uppercase letters
+    if (/[A-Z]/.test(password)) score++;
+
+    // Lowercase letters
+    if (/[a-z]/.test(password)) score++;
+
+    // Numbers
+    if (/[0-9]/.test(password)) score++;
+
+    // Special characters
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    // Determine strength
+    if (score < 2) return 'Weak';
+    if (score < 4) return 'Fair';
+    if (score < 6) return 'Good';
+    return 'Strong';
+  }
+</script>
 {% endblock %}

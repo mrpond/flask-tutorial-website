@@ -3,6 +3,7 @@ from sqlalchemy import text
 
 from flaskr.auth import login_required
 from flaskr.db import get_db
+from flaskr.turnstile import cf_turnstile_required
 
 bp = Blueprint("blog", __name__)
 
@@ -28,6 +29,7 @@ def index():
 
 @bp.route("/create", methods=("GET", "POST"))
 @login_required
+@cf_turnstile_required
 def create():
     if request.method == "POST":
         title = request.form.get("title")
@@ -84,6 +86,7 @@ def get_post(id, check_author=True):
 
 @bp.route("/<int:id>/update", methods=("GET", "POST"))
 @login_required
+@cf_turnstile_required
 def update(id):
     post = get_post(id)
     if post is None:
@@ -112,6 +115,7 @@ def update(id):
 
 @bp.route("/<int:id>/delete", methods=("POST",))
 @login_required
+@cf_turnstile_required
 def delete(id):
     post = get_post(id)
     if post is None:
@@ -123,76 +127,5 @@ def delete(id):
         db.commit()
     except Exception as e:
         flash(f"System error {e}")
-
-    return redirect(url_for("blog.index"))
-
-
-@bp.route("/manage/<int:id>/update", methods=("GET", "POST"))
-@login_required
-def manage_update(id):
-    if g.user["id"] == 1:
-        post = get_post(id, False)
-        if post is None:
-            return redirect(url_for("blog.manage"))
-
-        if request.method == "POST":
-            title = request.form.get("title")
-            body = request.form.get("body")
-
-            if not title:
-                flash("Title is required.")
-            else:
-                try:
-                    db = get_db()
-                    db.execute(
-                        text(
-                            "UPDATE post SET title = :title, body = :body WHERE id = :id"
-                        ),
-                        {"title": title, "body": body, "id": id},
-                    )
-                    db.commit()
-                    return redirect(url_for("blog.manage"))
-                except Exception as e:
-                    flash(f"System error {e}")
-
-    return render_template("blog/update.html", post=post)
-
-
-@bp.route("/manage/<int:id>/delete", methods=("POST",))
-@login_required
-def manage_delete(id):
-    if g.user["id"] == 1:
-        post = get_post(id, False)
-        if post is None:
-            return redirect(url_for("blog.manage"))
-
-        try:
-            db = get_db()
-            db.execute(text("DELETE FROM post WHERE id = :id"), {"id": id})
-            db.commit()
-            return redirect(url_for("blog.manage"))
-        except Exception as e:
-            flash(f"System error {e}")
-
-    return redirect(url_for("auth.dashboard"))
-
-
-@bp.route("/manage", methods=("GET", "POST"))
-@login_required
-def manage():
-    if g.user["id"] == 1:
-        try:
-            db = get_db()
-            posts = db.execute(
-                text(
-                    "SELECT p.id, title, body, created, author_id, username "
-                    "FROM post p JOIN user u ON p.author_id = u.id "
-                    "ORDER BY created DESC"
-                )
-            ).fetchall()
-
-            return render_template("blog/manage.html", posts=posts)
-        except Exception as e:
-            flash(f"System error {e}")
 
     return redirect(url_for("blog.index"))

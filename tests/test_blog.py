@@ -18,6 +18,16 @@ def test_index(client, auth):
     assert b'href="/1/update"' in response.data
 
 
+def test_dashboard(client, auth):
+    response = client.get("/")
+    assert b"Log In" in response.data
+    assert b"Register" in response.data
+
+    auth.login()
+    response = client.get("/auth/dashboard")
+    assert b"Dashboard" in response.data
+
+
 @pytest.mark.parametrize(
     "path",
     (

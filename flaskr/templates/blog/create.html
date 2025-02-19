@@ -5,11 +5,12 @@
 {% endblock %}
 
 {% block content %}
-<form method="post">
+<form id="create-form" method="post">
   <label for="title">Title</label>
   <input name="title" id="title" value="{{ request.form['title'] }}" required>
   <label for="body">Body</label>
   <textarea name="body" id="body">{{ request.form['body'] }}</textarea>
+  <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-create">
   <input type="submit" value="Save">
 </form>
 {% endblock %}

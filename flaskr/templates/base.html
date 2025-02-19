@@ -5,6 +5,8 @@
   <meta charset="utf8">
   <title>{% block title %}{% endblock %} - Flaskr</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="cf-site-key" content="{{ cf_site_key }}">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
 </head>
 
 <body>
@@ -31,6 +33,27 @@
     </div>
     {% block content %}{% endblock %}
   </section>
+
+  <div id="modal-backdrop"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+  </div>
+
+  <div id="modal-content"
+    style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; border:1px solid #ccc; z-index:1001; padding:20px;">
+    <h2 id="modal-title"></h2>
+    <p id="modal-text"></p>
+    <div id="cf-container"></div>
+    <button id="confirm-action">Confirm</button>
+    <button id="cancel-action">Cancel</button>
+  </div>
+  <script type="module">
+    import TurnstileManager from "{{ url_for('static', filename='turnstile.js') }}";
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const turnstileManager = new TurnstileManager();
+      turnstileManager.initialize();
+    });
+  </script>
 </body>
 
 </html>

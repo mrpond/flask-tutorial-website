@@ -14,7 +14,7 @@
   <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-edit">
 </form>
 <hr>
-<form id="delete-form" action="{{ url_for('blog.delete', id=post['id']) }}" method="post">
+<form id="delete-form" action="{{ url_for('manage.delete', id=post['id']) }}" method="post">
   <input class="danger" type="submit" value="Delete">
   <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-delete">
 </form>
