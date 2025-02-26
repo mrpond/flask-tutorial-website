@@ -5,7 +5,7 @@
   <meta charset="utf8">
   <title>{% block title %}{% endblock %} - Flaskr</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <meta name="cf-site-key" content="{{ cf_site_key }}">
+  <meta name="cf-turnstile-site-key" content="{{ cf_turnstile_site_key.default }}">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
 </head>
 

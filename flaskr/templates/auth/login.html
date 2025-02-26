@@ -10,6 +10,7 @@
   <input name="username" id="username" required>
   <label for="password">Password</label>
   <input type="password" name="password" id="password" required>
+  <input type="hidden" id="cf-turnstile-login-key" value="{{ cf_turnstile_site_key.login}}">
   <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-login">
   <input type="submit" value="Log In">
 </form>

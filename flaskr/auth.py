@@ -15,13 +15,13 @@ from sqlalchemy import text
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from flaskr.db import get_db
-from flaskr.turnstile import cf_turnstile_required
+from .flask_cf_turnstile import cf_turnstile_required
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
 @bp.route("/register", methods=("GET", "POST"))
-@cf_turnstile_required
+@cf_turnstile_required("login")
 def register():
     if request.method == "POST":
         username = request.form.get("username")
@@ -65,7 +65,7 @@ def register():
 
 
 @bp.route("/login", methods=("GET", "POST"))
-@cf_turnstile_required
+@cf_turnstile_required("login")
 def login():
     if request.method == "POST":
         username = request.form.get("username")
@@ -153,7 +153,7 @@ def dashboard():
 
 @bp.route("/change_password", methods=("GET", "POST"))
 @login_required
-@cf_turnstile_required
+@cf_turnstile_required("login")
 def change_password():
     if request.method == "POST":
         current_password = request.form.get("current_password")

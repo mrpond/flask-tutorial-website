@@ -1,6 +1,6 @@
 import pytest
 
-from flaskr.turnstile import cf_turnstile_verify
+from flaskr.turnstile import Flask_CF_Turnstile
 
 TURNSTILE_DUMMY_TOKEN = "XXXX.DUMMY.TOKEN.XXXX"
 

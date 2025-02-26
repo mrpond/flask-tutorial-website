@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 from flaskr.auth import login_required
 from flaskr.db import get_db
-from flaskr.turnstile import cf_turnstile_required
+from .flask_cf_turnstile import cf_turnstile_required
 
 bp = Blueprint("blog", __name__)
 
@@ -29,7 +29,7 @@ def index():
 
 @bp.route("/create", methods=("GET", "POST"))
 @login_required
-@cf_turnstile_required
+@cf_turnstile_required()
 def create():
     if request.method == "POST":
         title = request.form.get("title")
@@ -86,7 +86,7 @@ def get_post(id, check_author=True):
 
 @bp.route("/<int:id>/update", methods=("GET", "POST"))
 @login_required
-@cf_turnstile_required
+@cf_turnstile_required()
 def update(id):
     post = get_post(id)
     if post is None:
@@ -115,7 +115,7 @@ def update(id):
 
 @bp.route("/<int:id>/delete", methods=("POST",))
 @login_required
-@cf_turnstile_required
+@cf_turnstile_required()
 def delete(id):
     post = get_post(id)
     if post is None:

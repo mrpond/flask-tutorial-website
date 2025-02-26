@@ -2,6 +2,10 @@ import os
 import secrets
 
 from flask import Flask
+from .flask_cf_turnstile import Flask_CF_Turnstile
+import httpx
+
+CLOUDFLARE_IP_LIST_URL = "https://api.cloudflare.com/client/v4/ips"
 
 
 def create_app(custom_config=None) -> Flask:
@@ -13,13 +17,25 @@ def create_app(custom_config=None) -> Flask:
     except OSError:
         pass
 
+    CF_IPV4_CIDRS, CF_IPV6_CIDRS = get_cloudflare_cidrs()
+
     app.config.from_mapping(
         SECRET_KEY=get_secret_key(os.path.join(app.instance_path, "secret_key")),
         SQLITE_PATH=os.path.join(app.instance_path, "flaskr.sqlite"),
         SQLALCHEMY_DATABASE_URI=f"sqlite:///{os.path.join(app.instance_path, 'flaskr.sqlite')}",
-        CF_TURNSTILE_SITE_KEY= "3x00000000000000000000FF", #"1x00000000000000000000AA",
-        CF_TURNSTILE_SECRET_KEY="1x0000000000000000000000000000000AA",
         # SQLALCHEMY_DATABASE_URI="mariadb+mariadbconnector://root:123456@localhost:3306/flaskr",
+        CF_TURNSTILE_CONFIG={
+            "login": {
+                "site_key": "3x00000000000000000000FF",
+                "secret_key": "1x0000000000000000000000000000000AA",
+            },
+            "default": {
+                "site_key": "1x00000000000000000000AA",
+                "secret_key": "1x0000000000000000000000000000000AA",
+            },
+        },
+        CF_IPV4_LIST=CF_IPV4_CIDRS,
+        CF_IPV6_LIST=CF_IPV6_CIDRS,
     )
 
     if custom_config is None:
@@ -38,8 +54,9 @@ def create_app(custom_config=None) -> Flask:
 
     db.init_app(app)
 
-    from . import turnstile
+    # from . import turnstile
 
+    turnstile = Flask_CF_Turnstile()
     turnstile.init_app(app)
 
     from . import auth
@@ -68,3 +85,18 @@ def get_secret_key(path: str) -> str:
         with open(path, "r") as f:
             key = f.read().strip()
     return key
+
+
+def get_cloudflare_cidrs():
+    try:
+        with httpx.Client() as client:
+            response = client.get(CLOUDFLARE_IP_LIST_URL)
+            data = response.json()
+            if data["success"]:
+                return data["result"]["ipv4_cidrs"], data["result"]["ipv6_cidrs"]
+            else:
+                pass
+    except Exception:
+        raise SystemError("fail to get cloudflare IP list")
+        pass
+    return [], []

@@ -99,7 +99,7 @@ const forms = [
         auto: false,
     },
     {
-        id: 'login-form', target: 'cf-turnstile-login',
+        id: 'login-form', target: 'cf-turnstile-login', site_key: 'cf-turnstile-login-key',
         title: "Continue login", text: "",
         auto: true, callback: formValidation.validateLogin,
     },

@@ -17,8 +17,13 @@ class TurnstileManager {
         const text = document.getElementById('modal-text');
         const turnstileTokenContainerId = form.target;
 
-        const cfSiteKeyMeta = document.querySelector('meta[name="cf-site-key"]');
-        const cf_site_key = cfSiteKeyMeta ? cfSiteKeyMeta.getAttribute('content') : null;
+        const cfSiteKeyMeta = document.querySelector('meta[name="cf-turnstile-site-key"]');
+        let cf_site_key = cfSiteKeyMeta.getAttribute('content')
+
+        if (form.site_key)
+            cf_site_key = document.getElementById(form.site_key)?.value;
+
+        document.getElementById('modal-title');
 
         title.textContent = form.title;
         text.textContent = form.text;
@@ -32,6 +37,7 @@ class TurnstileManager {
         // show the turnstile widget
         this.turnstileWidgetId = turnstile.render(`#${this.turnstileContainerId}`, {
             sitekey: cf_site_key,
+            action: form.id,
             callback: (token) => {
                 document.getElementById(turnstileTokenContainerId).value = token;
                 console.log(`Challenge Success ${token}`);
