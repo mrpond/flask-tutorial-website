@@ -27,6 +27,7 @@ def create_app(custom_config=None) -> Flask:
         CF_TURNSTILE_CONFIG={
             "login": {
                 "site_key": "3x00000000000000000000FF",
+                #"secret_key": "3x0000000000000000000000000000000AA", 
                 "secret_key": "1x0000000000000000000000000000000AA",
             },
             "default": {
@@ -98,5 +99,4 @@ def get_cloudflare_cidrs():
                 pass
     except Exception:
         raise SystemError("fail to get cloudflare IP list")
-        pass
     return [], []

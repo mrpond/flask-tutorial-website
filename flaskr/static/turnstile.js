@@ -1,10 +1,12 @@
 // Turnstile.js
-import { forms, formValidation } from './forms.js';
 
 class TurnstileManager {
-    constructor() {
+    constructor(listForms) {
+        if (!listForms || !Array.isArray(listForms)) {
+            throw new Error('TurnstileManager requires an array of form configurations');
+        }
         this.turnstileWidgetId = null;
-        this.forms = forms;
+        this.forms = listForms;
         this.modalBackdrop = document.getElementById('modal-backdrop');
         this.modalContent = document.getElementById('modal-content');
         this.turnstileContainerId = 'cf-container';
@@ -13,17 +15,23 @@ class TurnstileManager {
     }
 
     showModal(form) {
+        const currentForm = document.getElementById(form.id);
+        if (!currentForm) {
+            return;
+        }
+
+        const turnstileTokenContainer = currentForm.querySelector(".cf-turnstile-response");
+        const formCfSiteKey = currentForm.querySelector(".cf-turnstile-site-key");
+
         const title = document.getElementById('modal-title');
         const text = document.getElementById('modal-text');
-        const turnstileTokenContainerId = form.target;
 
         const cfSiteKeyMeta = document.querySelector('meta[name="cf-turnstile-site-key"]');
-        let cf_site_key = cfSiteKeyMeta.getAttribute('content')
+        let cfSiteKey = cfSiteKeyMeta.getAttribute('content')
 
-        if (form.site_key)
-            cf_site_key = document.getElementById(form.site_key)?.value;
-
-        document.getElementById('modal-title');
+        if (formCfSiteKey) {
+            cfSiteKey = formCfSiteKey.value;
+        }
 
         title.textContent = form.title;
         text.textContent = form.text;
@@ -36,10 +44,10 @@ class TurnstileManager {
 
         // show the turnstile widget
         this.turnstileWidgetId = turnstile.render(`#${this.turnstileContainerId}`, {
-            sitekey: cf_site_key,
+            sitekey: cfSiteKey,
             action: form.id,
             callback: (token) => {
-                document.getElementById(turnstileTokenContainerId).value = token;
+                turnstileTokenContainer.value = token;
                 console.log(`Challenge Success ${token}`);
                 if (form.auto === true) {
                     this.submitForm(form.id);
