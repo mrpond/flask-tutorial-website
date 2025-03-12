@@ -111,6 +111,9 @@ class Flask_CF_Turnstile:
         Returns:
             str: The secret key for the widget.
         """
+        if widget_name is None:
+            widget_name = "default"
+
         if widget_name in self.__secret_keys:
             return self.__secret_keys[widget_name]
         raise ValueError(f"No secret key found for widget '{widget_name}'")
@@ -125,8 +128,12 @@ class Flask_CF_Turnstile:
         Returns:
             str: The site key for the widget.
         """
+        if widget_name is None:
+            widget_name = "default"
+
         if widget_name in self.__widgets:
             return self.__widgets[widget_name]
+
         raise ValueError(f"No site key found for widget '{widget_name}'")
 
     def __post_siteverify_api(
@@ -161,8 +168,8 @@ class Flask_CF_Turnstile:
                     response = client.post(self.VERIFY_URL, data=data).json()
 
                 return response
-            except Exception:
-                return None
+            except Exception as e:
+                raise e
 
     def verify(
         self,
@@ -190,39 +197,26 @@ class Flask_CF_Turnstile:
         """
         # https://developers.cloudflare.com/turnstile/get-started/server-side-validation/
 
+        result = False
         if not token:
-            return False, ["missing-input-response"]
+            return result, ["missing-input-response"]
 
-        if widget_name is None:
-            widget_name = "default"
+        if token == self.DUMMY_TOKEN and not current_app.debug:
+            return result, ["turnstile DUMMY_TOKEN detected in Production"]
 
         try:
-            errors = []
-            validate_result = False
             cf_secret = self.__get_secret_key(widget_name)
-
-            if token == self.DUMMY_TOKEN and not current_app.debug:
-                return False, ["turnstile DUMMY_TOKEN detected in Production"]
-
             response = self.__post_siteverify_api(cf_secret, token, client_ip)
-
-            if response is None:
-                errors = ["turnstile API verification request failed"]
-            else:
-                validate_result = response.get("success", False)
-                if not validate_result:
-                    errors = response.get(
-                        "error-codes", ["turnstile unknown API error"]
-                    )
-                elif verify_callback is not None:
-                    callback_result, callback_errors = verify_callback(
-                        response=response, **callback_kwargs
-                    )
-                    return callback_result, callback_errors
-
-            return validate_result, [
-                "turnstile API verification OK"
-            ] if not errors else errors
-
         except ValueError as e:
-            return False, [str(e)]
+            return result, [str(e)]
+
+        result = response.get("success", False)
+        if result is False:
+            return result, response.get("error-codes", ["turnstile unknown API error"])
+
+        message = ["turnstile API verification OK"]
+
+        if verify_callback is not None:
+            result, message = verify_callback(response=response, **callback_kwargs)
+
+        return result, message
