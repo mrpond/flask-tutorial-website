@@ -26,10 +26,15 @@ def register():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
+        confirm_password = request.form.get("confirm_password")
+        
         message = None
 
         if not username or not password:
             message = "Username and password is required."
+
+        if password != confirm_password:
+            message = "Password do not match."
 
         if message is None:
             try:
@@ -71,7 +76,7 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
         message = None
-
+        
         if not username or not password:
             message = "Username and password is required."
 

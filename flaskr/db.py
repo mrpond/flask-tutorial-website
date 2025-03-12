@@ -1,16 +1,17 @@
 import click
 from flask import current_app, g
-from sqlalchemy import Connection, NullPool, create_engine, text
+from sqlalchemy import Connection, Engine, NullPool, create_engine, text
 
 
 def get_db() -> Connection:
     if "db" not in g:
-        g.db = current_app.db_pool.connect()
+        pool: Engine = current_app.db_pool
+        g.db = pool.connect()
     return g.db
 
 
 def close_db(e=None):
-    db = g.pop("db", None)
+    db: Connection | None = g.pop("db", None)
     if db is not None:
         db.close()
 
@@ -40,7 +41,7 @@ def init_db():
             raise ValueError(f"Unsupported DB type: {db_type}")
 
     with current_app.open_resource(sql_file) as f:
-        schema_sql = f.read().decode("utf8")
+        schema_sql = f.read().decode("utf-8")
         executescript(schema_sql)
 
 

@@ -11,16 +11,16 @@ class Turnstile:
     # https://developers.cloudflare.com/turnstile/
 
     # https://developers.cloudflare.com/turnstile/troubleshooting/testing/
-    DUMMY_TOKEN = "XXXX.DUMMY.TOKEN.XXXX"
-    VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
-    DUMMY_SITE_KEYS = [
+    __DUMMY_TOKEN = "XXXX.DUMMY.TOKEN.XXXX"
+    __VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+    __DUMMY_SITE_KEYS = [
         "1x00000000000000000000AA",  # Always passes	visible
         "2x00000000000000000000AB",  # Always blocks	visible
         "1x00000000000000000000BB",  # Always passes	invisible
         "2x00000000000000000000BB",  # Always blocks	invisible
         "3x00000000000000000000FF",  # Forces an interactive challenge	visible
     ]
-    DUMMY_SECRET_KEYS = [
+    __DUMMY_SECRET_KEYS = [
         "1x0000000000000000000000000000000AA",  # Always passes
         "2x0000000000000000000000000000000AA",  # Always fails
         "3x0000000000000000000000000000000AA",  # Yields a "token already spent" error
@@ -73,33 +73,40 @@ class Turnstile:
                     # Store secret_key in private __secret_keys
                     self.__secret_keys[widget_name] = str(data["secret_key"])
 
-                    if not app.debug:
-                        if self.__check_dummy_site_key(str(data["site_key"])):
-                            raise SystemError(
-                                f"Turnstile dummy site key detected for '{widget_name}': {data}. "
-                            )
-                        if self.__check_dummy_secret_key(str(data["secret_key"])):
-                            raise SystemError(
-                                f"Turnstile dummy secret key detected for '{widget_name}': {data}. "
-                            )
                 else:
                     raise ValueError(
                         f"Invalid widget config for '{widget_name}': {data}. "
                         "Must contain 'site_key' and 'secret_key'"
                     )
 
-        app.turnstile = self  # Store instance in app for easy access
+            if not app.debug and not app.testing:
+                self.check_dummy_key(config.items())
+
+        # app.turnstile = self  # Store instance in app for easy access
+        app.extensions["turnstile"] = self
 
         @app.context_processor
         def inject_config() -> dict[str, str]:
             """Inject Turnstile site key into templates."""
             return {"cf_turnstile_site_key": self.__widgets}
 
+    def check_dummy_key(self, items) -> None:
+        for widget_name, data in items:
+            if all(key in data for key in ("site_key", "secret_key")):
+                if self.__check_dummy_site_key(str(data["site_key"])):
+                    raise SystemError(
+                        f"Turnstile dummy site key detected for '{widget_name}': {data}. "
+                    )
+                if self.__check_dummy_secret_key(str(data["secret_key"])):
+                    raise SystemError(
+                        f"Turnstile dummy secret key detected for '{widget_name}': {data}. "
+                    )
+
     def __check_dummy_site_key(self, site_key: str) -> bool:
-        return site_key in self.DUMMY_SITE_KEYS
+        return site_key in self.__DUMMY_SITE_KEYS
 
     def __check_dummy_secret_key(self, secret_key: str) -> bool:
-        return secret_key in self.DUMMY_SECRET_KEYS
+        return secret_key in self.__DUMMY_SECRET_KEYS
 
     def __get_secret_key(self, widget_name: str) -> str:
         """
@@ -111,14 +118,14 @@ class Turnstile:
         Returns:
             str: The secret key for the widget.
         """
-        if widget_name is None:
+        if not widget_name:
             widget_name = "default"
 
         if widget_name in self.__secret_keys:
             return self.__secret_keys[widget_name]
         raise ValueError(f"No secret key found for widget '{widget_name}'")
 
-    def get_site_key(self, widget_name: str) -> str:
+    def get_site_key(self, widget_name: str = None) -> str:
         """
         Private method to retrieve the site key for a given widget.
 
@@ -128,7 +135,7 @@ class Turnstile:
         Returns:
             str: The site key for the widget.
         """
-        if widget_name is None:
+        if not widget_name:
             widget_name = "default"
 
         if widget_name in self.__widgets:
@@ -162,10 +169,10 @@ class Turnstile:
 
         with httpx.Client() as client:
             try:
-                response = client.post(self.VERIFY_URL, data=data).json()
+                response = client.post(self.__VERIFY_URL, data=data).json()
 
                 if not response.get("success", False):
-                    response = client.post(self.VERIFY_URL, data=data).json()
+                    response = client.post(self.__VERIFY_URL, data=data).json()
 
                 return response
             except Exception as e:
@@ -201,7 +208,9 @@ class Turnstile:
         if not token:
             return result, ["missing-input-response"]
 
-        if token == self.DUMMY_TOKEN and not current_app.debug:
+        if token == self.__DUMMY_TOKEN and (
+            not current_app.debug and not current_app.testing
+        ):
             return result, ["turnstile DUMMY_TOKEN detected in Production"]
 
         try:

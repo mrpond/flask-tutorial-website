@@ -93,8 +93,9 @@ def cf_turnstile_required(
         def wrapped_view(**kwargs):
             if request.method == "POST" and not current_app.testing:
                 cf_response_token = request.form.get("cf-turnstile-response")
+                turnstile = current_app.extensions["turnstile"]
 
-                result, message = current_app.turnstile.verify(
+                result, message = turnstile.verify(
                     widget_name=widget_name,
                     token=cf_response_token,
                     client_ip=cf_get_client_ip(),

@@ -23,11 +23,11 @@ def create_app(custom_config=None) -> Flask:
         SECRET_KEY=get_secret_key(os.path.join(app.instance_path, "secret_key")),
         SQLITE_PATH=os.path.join(app.instance_path, "flaskr.sqlite"),
         SQLALCHEMY_DATABASE_URI=f"sqlite:///{os.path.join(app.instance_path, 'flaskr.sqlite')}",
-        # SQLALCHEMY_DATABASE_URI="mariadb+mariadbconnector://root:123456@localhost:3306/flaskr",
+        # SQLALCHEMY_DATABASE_URI="mariadb+mariadbconnector://root:aA123456!@localhost:3306/flaskr",
         CF_TURNSTILE_CONFIG={
             "login": {
                 "site_key": "3x00000000000000000000FF",
-                #"secret_key": "3x0000000000000000000000000000000AA", 
+                # "secret_key": "3x0000000000000000000000000000000AA",
                 "secret_key": "1x0000000000000000000000000000000AA",
             },
             "default": {
@@ -56,8 +56,8 @@ def create_app(custom_config=None) -> Flask:
     db.init_app(app)
 
     # from . import turnstile
-
     turnstile = Turnstile()
+
     turnstile.init_app(app)
 
     from . import auth
@@ -95,8 +95,7 @@ def get_cloudflare_cidrs():
             data = response.json()
             if data["success"]:
                 return data["result"]["ipv4_cidrs"], data["result"]["ipv6_cidrs"]
-            else:
-                pass
+
     except Exception:
         raise SystemError("fail to get cloudflare IP list")
-    return [], []
+    raise SystemError("fail to get cloudflare IP list")

@@ -20,6 +20,17 @@ def app():
             "SQLITE_PATH": db_path,
             # "SQLALCHEMY_DATABASE_URI": "mariadb+mariadbconnector://root:123456@localhost:3306/flaskr",
             "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
+            "CF_TURNSTILE_CONFIG": {
+                "login": {
+                    "site_key": "3x00000000000000000000FF",
+                    # "secret_key": "3x0000000000000000000000000000000AA",
+                    "secret_key": "1x0000000000000000000000000000000AA",
+                },
+                "default": {
+                    "site_key": "1x00000000000000000000AA",
+                    "secret_key": "1x0000000000000000000000000000000AA",
+                },
+            },
         }
     )
 
