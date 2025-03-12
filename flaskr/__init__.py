@@ -2,7 +2,7 @@ import os
 import secrets
 
 from flask import Flask
-from .flask_cf_turnstile import Flask_CF_Turnstile
+from .flask_cf_turnstile import Turnstile
 import httpx
 
 CLOUDFLARE_IP_LIST_URL = "https://api.cloudflare.com/client/v4/ips"
@@ -57,7 +57,7 @@ def create_app(custom_config=None) -> Flask:
 
     # from . import turnstile
 
-    turnstile = Flask_CF_Turnstile()
+    turnstile = Turnstile()
     turnstile.init_app(app)
 
     from . import auth

@@ -5,7 +5,7 @@ import httpx
 from flask import Flask, current_app
 
 
-class Flask_CF_Turnstile:
+class Turnstile:
     """Flask extension for Cloudflare Turnstile CAPTCHA integration."""
 
     # https://developers.cloudflare.com/turnstile/
